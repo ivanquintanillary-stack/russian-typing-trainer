@@ -65,13 +65,17 @@
     .toolbar { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 14px; padding: 13px; border-radius: 18px; margin-bottom: 10px; }
     label { display: block; color: var(--muted); font-size: .78rem; font-weight: 700; }
     select { width: 100%; margin-top: 6px; padding: 10px 12px; color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 12px; }
+    .toggles { display: flex; align-items: center; gap: 14px; }
     .toggle { display: flex; align-items: center; gap: 8px; min-height: 42px; color: var(--ink); }
     .toggle input { width: 20px; height: 20px; accent-color: var(--accent); }
-    .trainer { padding: clamp(22px, 7vw, 38px); border-radius: 24px; }
+    .trainer { position: relative; overflow: hidden; padding: clamp(22px, 7vw, 38px); border-radius: 24px; }
+    .trainer > :not(.success-burst) { position: relative; z-index: 1; }
     .prompt-label { margin: 0; text-align: center; color: var(--muted); font-size: .73rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
     .word { min-height: 1.25em; margin: 18px 0 12px; text-align: center; font-size: clamp(2.6rem, 14vw, 5rem); font-weight: 750; line-height: 1.08; letter-spacing: .015em; overflow-wrap: anywhere; }
-    .meaning { min-height: 2.6em; margin: 0 0 24px; display: grid; place-items: center; color: var(--muted); text-align: center; font-size: 1.06rem; }
+    .meaning { min-height: 2.6em; margin: 0; display: grid; place-items: center; color: var(--muted); text-align: center; font-size: 1.06rem; }
     .meaning.revealed { color: var(--success); font-weight: 800; }
+    .romanization { min-height: 1.45em; margin: 2px 0 22px; color: var(--muted); text-align: center; font-size: .84rem; font-style: italic; letter-spacing: .045em; opacity: 0; transform: translateY(-3px); }
+    .romanization.revealed { opacity: 1; transform: translateY(0); transition: opacity .25s ease, transform .25s ease; }
     .answer-label { margin-bottom: 7px; }
     #answer { width: 100%; min-height: 58px; padding: 10px 14px; color: var(--ink); background: color-mix(in srgb, var(--paper) 55%, transparent); border: 2px solid var(--line); border-radius: 15px; outline: none; text-align: center; font-size: 1.65rem; }
     #answer:focus { border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent); }
@@ -82,12 +86,38 @@
     .feedback.no { color: var(--danger); }
     .next { width: 100%; min-height: 52px; margin-top: 8px; border: 0; border-radius: 14px; color: var(--accent-ink); background: var(--accent); font-weight: 850; cursor: pointer; }
     .next:disabled { opacity: .42; cursor: default; }
+    .success-burst { position: absolute; top: 37%; left: 50%; width: 1px; height: 1px; z-index: 0; pointer-events: none; }
+    .success-burst i { position: absolute; width: 8px; height: 8px; border-radius: 50%; background: var(--success); opacity: 0; transform: translate(-50%,-50%) rotate(var(--angle)) translateX(8px) scale(.4); }
+    .success-burst i:nth-child(1) { --angle: 0deg; }
+    .success-burst i:nth-child(2) { --angle: 45deg; background: #d8a942; }
+    .success-burst i:nth-child(3) { --angle: 90deg; }
+    .success-burst i:nth-child(4) { --angle: 135deg; background: #d8a942; }
+    .success-burst i:nth-child(5) { --angle: 180deg; }
+    .success-burst i:nth-child(6) { --angle: 225deg; background: #d8a942; }
+    .success-burst i:nth-child(7) { --angle: 270deg; }
+    .success-burst i:nth-child(8) { --angle: 315deg; background: #d8a942; }
+    .trainer.celebrate { animation: successGlow .58s ease-out; }
+    .trainer.celebrate .word { animation: wordPop .42s cubic-bezier(.2,.9,.3,1.35); }
+    .trainer.celebrate .success-burst i { animation: sparkle .62s ease-out both; }
+    @keyframes successGlow {
+      35% { border-color: color-mix(in srgb, var(--success) 60%, var(--line)); box-shadow: 0 18px 60px rgba(31,48,40,.12), 0 0 0 5px color-mix(in srgb, var(--success) 15%, transparent); }
+    }
+    @keyframes wordPop { 45% { transform: scale(1.06); color: var(--success); } }
+    @keyframes sparkle {
+      0% { opacity: 0; transform: translate(-50%,-50%) rotate(var(--angle)) translateX(8px) scale(.4); }
+      25% { opacity: 1; }
+      100% { opacity: 0; transform: translate(-50%,-50%) rotate(var(--angle)) translateX(115px) scale(1.1); }
+    }
     footer { display: flex; justify-content: space-between; gap: 14px; padding: 15px 4px 0; color: var(--muted); font-size: .76rem; }
     .link-button { padding: 0; border: 0; color: inherit; background: transparent; text-decoration: underline; cursor: pointer; }
     @media (max-width: 410px) {
       .toolbar { grid-template-columns: 1fr; }
+      .toggles { justify-content: space-between; }
       .toggle { min-height: auto; }
       footer { flex-direction: column; align-items: center; }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .trainer.celebrate, .trainer.celebrate .word, .trainer.celebrate .success-burst i { animation: none; }
     }
   </style>
 </head>
@@ -116,13 +146,18 @@
           <option value="all">All 335 words</option>
         </select>
       </label>
-      <label class="toggle"><input id="auto" type="checkbox" checked> Auto-next</label>
+      <div class="toggles">
+        <label class="toggle"><input id="auto" type="checkbox" checked> Auto-next</label>
+        <label class="toggle"><input id="sound" type="checkbox" checked> Sound</label>
+      </div>
     </section>
 
-    <section class="trainer">
+    <section class="trainer" id="trainer">
+      <div class="success-burst" aria-hidden="true"><i></i><i></i><i></i><i></i><i></i><i></i><i></i><i></i></div>
       <p class="prompt-label">Type this word</p>
       <div class="word" id="word" lang="ru">всегда</div>
       <div class="meaning" id="meaning" aria-live="polite">Meaning hidden until you type it</div>
+      <div class="romanization" id="romanization"></div>
 
       <label class="answer-label" for="answer">Your Russian</label>
       <input id="answer" type="text" lang="ru" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="next" aria-describedby="feedback">
@@ -156,8 +191,8 @@
 
       const $ = (id) => document.getElementById(id);
       const els = {
-        word: $('word'), meaning: $('meaning'), answer: $('answer'), feedback: $('feedback'), next: $('next'),
-        level: $('level'), auto: $('auto'), correct: $('correct'), streak: $('streak'), seen: $('seen'), pool: $('poolInfo')
+        trainer: $('trainer'), word: $('word'), meaning: $('meaning'), romanization: $('romanization'), answer: $('answer'), feedback: $('feedback'), next: $('next'),
+        level: $('level'), auto: $('auto'), sound: $('sound'), correct: $('correct'), streak: $('streak'), seen: $('seen'), pool: $('poolInfo')
       };
       const storageKey = 'russianTypingTrainer.v2';
       const saved = JSON.parse(localStorage.getItem(storageKey) || '{}');
@@ -168,9 +203,42 @@
       let solved = false;
       let mistakeCounted = false;
       let timer = null;
+      let audioContext = null;
 
       if (saved.level && ['common','intermediate','hard','all'].includes(saved.level)) els.level.value = saved.level;
       els.auto.checked = saved.auto !== false;
+      els.sound.checked = saved.sound !== false;
+
+      const transliteration = {
+        а:'a', б:'b', в:'v', г:'g', д:'d', е:'e', ё:'yo', ж:'zh', з:'z', и:'i', й:'y',
+        к:'k', л:'l', м:'m', н:'n', о:'o', п:'p', р:'r', с:'s', т:'t', у:'u', ф:'f',
+        х:'kh', ц:'ts', ч:'ch', ш:'sh', щ:'shch', ъ:'”', ы:'y', ь:'’', э:'e', ю:'yu', я:'ya'
+      };
+
+      function romanize(word) {
+        return [...word.toLocaleLowerCase('ru')].map((letter) => transliteration[letter] ?? letter).join('');
+      }
+
+      async function playSuccessSound() {
+        if (!els.sound.checked) return;
+        const AudioContext = window.AudioContext || window.webkitAudioContext;
+        if (!AudioContext) return;
+        audioContext ||= new AudioContext();
+        if (audioContext.state === 'suspended') await audioContext.resume();
+        const now = audioContext.currentTime;
+        [[659.25, 0], [783.99, .085], [987.77, .17]].forEach(([frequency, delay]) => {
+          const oscillator = audioContext.createOscillator();
+          const gain = audioContext.createGain();
+          oscillator.type = 'sine';
+          oscillator.frequency.setValueAtTime(frequency, now + delay);
+          gain.gain.setValueAtTime(.0001, now + delay);
+          gain.gain.exponentialRampToValueAtTime(.085, now + delay + .018);
+          gain.gain.exponentialRampToValueAtTime(.0001, now + delay + .16);
+          oscillator.connect(gain).connect(audioContext.destination);
+          oscillator.start(now + delay);
+          oscillator.stop(now + delay + .17);
+        });
+      }
 
       function activePool() {
         if (els.level.value === 'all') return [...banks.common, ...banks.intermediate, ...banks.hard];
@@ -188,7 +256,7 @@
         return copy;
       }
       function save() {
-        localStorage.setItem(storageKey, JSON.stringify({ ...stats, level: els.level.value, auto: els.auto.checked }));
+        localStorage.setItem(storageKey, JSON.stringify({ ...stats, level: els.level.value, auto: els.auto.checked, sound: els.sound.checked }));
       }
       function paintStats() {
         els.correct.textContent = stats.correct;
@@ -204,9 +272,12 @@
         previousRussian = current[0];
         solved = false;
         mistakeCounted = false;
+        els.trainer.classList.remove('celebrate');
         els.word.textContent = current[0];
         els.meaning.textContent = 'Meaning hidden until you type it';
         els.meaning.className = 'meaning';
+        els.romanization.textContent = '';
+        els.romanization.className = 'romanization';
         els.answer.value = '';
         els.answer.className = '';
         els.feedback.textContent = '';
@@ -223,12 +294,18 @@
         els.answer.className = 'correct';
         els.meaning.textContent = `${current[0]} = ${current[1]}`;
         els.meaning.className = 'meaning revealed';
+        els.romanization.textContent = romanize(current[0]);
+        els.romanization.className = 'romanization revealed';
         els.feedback.textContent = '✓ Correct';
         els.feedback.className = 'feedback ok';
         els.next.disabled = false;
+        els.trainer.classList.remove('celebrate');
+        void els.trainer.offsetWidth;
+        els.trainer.classList.add('celebrate');
+        playSuccessSound().catch(() => {});
         paintStats();
         save();
-        if (els.auto.checked) timer = window.setTimeout(nextWord, 1050);
+        if (els.auto.checked) timer = window.setTimeout(nextWord, 2050);
       }
       function check() {
         if (solved || !current) return;
@@ -261,8 +338,9 @@
       els.auto.addEventListener('change', () => {
         save();
         if (!els.auto.checked) window.clearTimeout(timer);
-        else if (solved) timer = window.setTimeout(nextWord, 700);
+        else if (solved) timer = window.setTimeout(nextWord, 1700);
       });
+      els.sound.addEventListener('change', save);
       $('reset').addEventListener('click', () => {
         if (!window.confirm('Reset your counters and streak?')) return;
         stats = { correct: 0, streak: 0, seen: 0 };

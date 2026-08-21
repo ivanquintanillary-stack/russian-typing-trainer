@@ -1,5 +1,5 @@
-const CACHE = 'russian-typing-trainer-v2';
-const FILES = ['./', './index.html', './manifest.webmanifest'];
+const CACHE = 'russian-typing-trainer-v3';
+const FILES = ['./', './index.html', './manifest.webmanifest', './sw.js'];
 
 self.addEventListener('install', (event) => {
   event.waitUntil(caches.open(CACHE).then((cache) => cache.addAll(FILES)).then(() => self.skipWaiting()));

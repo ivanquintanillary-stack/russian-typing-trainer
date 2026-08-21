@@ -2,6 +2,9 @@ RUSSIAN TYPING TRAINER
 
 This is a small installable web app for practicing Russian typing.
 
+Completing a word reveals its English meaning and romanization, plays a short
+success sound, and shows a celebration animation. Sound can be turned off.
+
 Files:
 - index.html — the complete trainer and its 335-word vocabulary
 - manifest.webmanifest — lets a phone install the site as an app
