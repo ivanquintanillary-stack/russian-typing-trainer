@@ -1,0 +1,13 @@
+{
+  "name": "Russian Typing Trainer",
+  "short_name": "Russian Typing",
+  "description": "Practice Cyrillic typing and reveal useful English meanings.",
+  "id": "./",
+  "start_url": "./",
+  "scope": "./",
+  "display": "standalone",
+  "background_color": "#f4f0e7",
+  "theme_color": "#3f5f52",
+  "lang": "en",
+  "categories": ["education", "games"]
+}

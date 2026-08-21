@@ -1,0 +1,280 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+  <meta name="theme-color" content="#3f5f52">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="default">
+  <meta name="apple-mobile-web-app-title" content="Russian Typing">
+  <title>Russian Typing Trainer</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <style>
+    :root {
+      color-scheme: light dark;
+      --paper: #f4f0e7;
+      --card: rgba(255,255,255,.84);
+      --ink: #1d2924;
+      --muted: #68746d;
+      --line: rgba(29,41,36,.13);
+      --accent: #3f5f52;
+      --accent-ink: #fff;
+      --success: #26734d;
+      --danger: #a64040;
+      --shadow: 0 18px 60px rgba(31,48,40,.12);
+    }
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --paper: #14201b;
+        --card: rgba(31,46,39,.92);
+        --ink: #f4f2ea;
+        --muted: #adb8b1;
+        --line: rgba(255,255,255,.12);
+        --accent: #9bc7b2;
+        --accent-ink: #173027;
+        --success: #8ed6ae;
+        --danger: #ffaaaa;
+        --shadow: 0 18px 60px rgba(0,0,0,.28);
+      }
+    }
+    * { box-sizing: border-box; }
+    html { min-height: 100%; background: var(--paper); }
+    body {
+      min-height: 100vh;
+      min-height: 100dvh;
+      margin: 0;
+      padding: max(18px, env(safe-area-inset-top)) 16px max(20px, env(safe-area-inset-bottom));
+      color: var(--ink);
+      background:
+        radial-gradient(circle at 10% 4%, rgba(148,194,172,.22), transparent 34%),
+        radial-gradient(circle at 95% 95%, rgba(194,155,114,.16), transparent 38%),
+        var(--paper);
+      font-family: ui-rounded, "SF Pro Rounded", -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+    }
+    button, input, select { font: inherit; }
+    .app { width: min(100%, 680px); margin: 0 auto; }
+    header { display: flex; align-items: end; justify-content: space-between; gap: 16px; margin: 4px 2px 18px; }
+    .eyebrow { margin: 0 0 4px; color: var(--muted); font-size: .78rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+    h1 { margin: 0; font-size: clamp(1.65rem, 7vw, 2.35rem); line-height: 1; letter-spacing: -.035em; }
+    .pool { color: var(--muted); font-size: .82rem; white-space: nowrap; }
+    .stats { display: grid; grid-template-columns: repeat(3, 1fr); gap: 9px; margin-bottom: 10px; }
+    .stat, .toolbar, .trainer { border: 1px solid var(--line); background: var(--card); box-shadow: var(--shadow); backdrop-filter: blur(12px); }
+    .stat { padding: 12px 10px; border-radius: 16px; text-align: center; }
+    .stat span { display: block; color: var(--muted); font-size: .73rem; font-weight: 700; text-transform: uppercase; letter-spacing: .08em; }
+    .stat strong { display: block; margin-top: 2px; font-size: 1.55rem; }
+    .toolbar { display: grid; grid-template-columns: 1fr auto; align-items: end; gap: 14px; padding: 13px; border-radius: 18px; margin-bottom: 10px; }
+    label { display: block; color: var(--muted); font-size: .78rem; font-weight: 700; }
+    select { width: 100%; margin-top: 6px; padding: 10px 12px; color: var(--ink); background: transparent; border: 1px solid var(--line); border-radius: 12px; }
+    .toggle { display: flex; align-items: center; gap: 8px; min-height: 42px; color: var(--ink); }
+    .toggle input { width: 20px; height: 20px; accent-color: var(--accent); }
+    .trainer { padding: clamp(22px, 7vw, 38px); border-radius: 24px; }
+    .prompt-label { margin: 0; text-align: center; color: var(--muted); font-size: .73rem; font-weight: 800; letter-spacing: .14em; text-transform: uppercase; }
+    .word { min-height: 1.25em; margin: 18px 0 12px; text-align: center; font-size: clamp(2.6rem, 14vw, 5rem); font-weight: 750; line-height: 1.08; letter-spacing: .015em; overflow-wrap: anywhere; }
+    .meaning { min-height: 2.6em; margin: 0 0 24px; display: grid; place-items: center; color: var(--muted); text-align: center; font-size: 1.06rem; }
+    .meaning.revealed { color: var(--success); font-weight: 800; }
+    .answer-label { margin-bottom: 7px; }
+    #answer { width: 100%; min-height: 58px; padding: 10px 14px; color: var(--ink); background: color-mix(in srgb, var(--paper) 55%, transparent); border: 2px solid var(--line); border-radius: 15px; outline: none; text-align: center; font-size: 1.65rem; }
+    #answer:focus { border-color: var(--accent); box-shadow: 0 0 0 4px color-mix(in srgb, var(--accent) 18%, transparent); }
+    #answer.correct { border-color: var(--success); }
+    #answer.wrong { border-color: var(--danger); }
+    .feedback { min-height: 1.45em; margin: 9px 0 2px; text-align: center; color: var(--muted); font-size: .9rem; }
+    .feedback.ok { color: var(--success); font-weight: 800; }
+    .feedback.no { color: var(--danger); }
+    .next { width: 100%; min-height: 52px; margin-top: 8px; border: 0; border-radius: 14px; color: var(--accent-ink); background: var(--accent); font-weight: 850; cursor: pointer; }
+    .next:disabled { opacity: .42; cursor: default; }
+    footer { display: flex; justify-content: space-between; gap: 14px; padding: 15px 4px 0; color: var(--muted); font-size: .76rem; }
+    .link-button { padding: 0; border: 0; color: inherit; background: transparent; text-decoration: underline; cursor: pointer; }
+    @media (max-width: 410px) {
+      .toolbar { grid-template-columns: 1fr; }
+      .toggle { min-height: auto; }
+      footer { flex-direction: column; align-items: center; }
+    }
+  </style>
+</head>
+<body>
+  <main class="app">
+    <header>
+      <div>
+        <p class="eyebrow">Daily practice</p>
+        <h1>Russian Typing</h1>
+      </div>
+      <div class="pool" id="poolInfo">Loading…</div>
+    </header>
+
+    <section class="stats" aria-label="Progress">
+      <div class="stat"><span>Correct</span><strong id="correct">0</strong></div>
+      <div class="stat"><span>Streak</span><strong id="streak">0</strong></div>
+      <div class="stat"><span>Seen</span><strong id="seen">0</strong></div>
+    </section>
+
+    <section class="toolbar" aria-label="Practice settings">
+      <label>Difficulty
+        <select id="level">
+          <option value="common">Common</option>
+          <option value="intermediate">Intermediate</option>
+          <option value="hard">Hard</option>
+          <option value="all">All 335 words</option>
+        </select>
+      </label>
+      <label class="toggle"><input id="auto" type="checkbox" checked> Auto-next</label>
+    </section>
+
+    <section class="trainer">
+      <p class="prompt-label">Type this word</p>
+      <div class="word" id="word" lang="ru">всегда</div>
+      <div class="meaning" id="meaning" aria-live="polite">Meaning hidden until you type it</div>
+
+      <label class="answer-label" for="answer">Your Russian</label>
+      <input id="answer" type="text" lang="ru" inputmode="text" autocomplete="off" autocapitalize="off" spellcheck="false" enterkeyhint="next" aria-describedby="feedback">
+      <div class="feedback" id="feedback" aria-live="polite"></div>
+      <button class="next" id="next" type="button" disabled>Next word →</button>
+    </section>
+
+    <footer>
+      <span>Progress is saved on this device.</span>
+      <button class="link-button" id="reset" type="button">Reset progress</button>
+    </footer>
+  </main>
+
+  <script>
+    (() => {
+      const banks = {
+        common: [
+          ['всегда','always'],['никогда','never'],['сегодня','today'],['завтра','tomorrow'],['вчера','yesterday'],['сейчас','now'],['потом','later'],['здесь','here'],['там','there'],['где','where'],['куда','where to'],['когда','when'],['почему','why'],['потому','because'],['как','how'],['что','what'],['кто','who'],['да','yes'],['нет','no'],['может','maybe / can'],['можно','it is possible / may'],['нельзя','not allowed / impossible'],['конечно','of course'],['только','only'],['ещё','still / more'],['уже','already'],['очень','very'],['тоже','also'],['вместе','together'],['рядом','near / beside'],['дом','home / house'],['работа','work'],['время','time'],['день','day'],['ночь','night'],['утро','morning'],['вечер','evening'],['год','year'],['неделя','week'],['месяц','month'],['человек','person'],['друг','friend'],['семья','family'],['мама','mom'],['папа','dad'],['муж','husband'],['жена','wife'],['девушка','girl / young woman'],['мужчина','man'],['женщина','woman'],['ребёнок','child'],['любовь','love'],['жизнь','life'],['мир','world / peace'],['сердце','heart'],['глаз','eye'],['рука','hand / arm'],['голова','head'],['спина','back'],['вода','water'],['еда','food'],['кофе','coffee'],['чай','tea'],['хлеб','bread'],['мясо','meat'],['рыба','fish'],['город','city'],['страна','country'],['дорога','road'],['машина','car'],['деньги','money'],['слово','word'],['вопрос','question'],['ответ','answer'],['имя','name'],['дело','matter / business'],['место','place'],['вещь','thing'],['хорошо','well / good'],['плохо','badly / bad'],['много','many / a lot'],['мало','little / few'],['больше','more'],['меньше','less'],['быстро','quickly'],['медленно','slowly'],['снова','again'],['просто','simply'],['правда','truth / really'],['привет','hi'],['пока','bye / for now'],['спасибо','thank you'],['пожалуйста','please / you are welcome'],['извини','sorry / excuse me'],['любимый','beloved / favorite'],['любимая','beloved / favorite'],['красивый','beautiful'],['большой','big'],['маленький','small'],['новый','new'],['старый','old'],['хороший','good'],['первый','first'],['последний','last'],['другой','other / another'],['каждый','each / every'],['весь','all / whole'],['мой','my'],['твой','your'],['наш','our'],['этот','this'],['тот','that'],['думать','to think'],['знать','to know'],['говорить','to speak'],['сказать','to say'],['видеть','to see'],['смотреть','to look / watch'],['слушать','to listen'],['слышать','to hear'],['понимать','to understand'],['хотеть','to want'],['любить','to love'],['ждать','to wait'],['жить','to live'],['работать','to work'],['делать','to do / make'],['идти','to go / walk'],['ехать','to go by transport'],['приходить','to come'],['есть','to eat / there is'],['пить','to drink'],['спать','to sleep'],['писать','to write'],['читать','to read'],['помнить','to remember'],['забыть','to forget'],['искать','to search'],['найти','to find'],['дать','to give'],['взять','to take'],['купить','to buy'],['помочь','to help'],['чувствовать','to feel'],['верить','to believe'],['начать','to begin'],['закончить','to finish']
+        ],
+        intermediate: [
+          ['обязательно','definitely / necessarily'],['возможно','possibly'],['невозможно','impossible'],['наверное','probably'],['действительно','really / indeed'],['особенно','especially'],['совсем','completely / at all'],['почти','almost'],['примерно','approximately'],['достаточно','enough'],['обычно','usually'],['иногда','sometimes'],['редко','rarely'],['сразу','immediately'],['вдруг','suddenly'],['наконец','finally'],['впереди','ahead'],['назад','back'],['вокруг','around'],['внутри','inside'],['снаружи','outside'],['далеко','far'],['близко','close'],['между','between'],['около','near / about'],['против','against'],['кроме','except / besides'],['чувство','feeling'],['мысль','thought'],['мечта','dream'],['счастье','happiness'],['надежда','hope'],['страх','fear'],['проблема','problem'],['причина','reason'],['решение','decision / solution'],['случай','case / occasion'],['момент','moment'],['история','story / history'],['помощь','help'],['подарок','gift'],['праздник','holiday / celebration'],['встреча','meeting'],['поездка','trip'],['путешествие','journey / travel'],['самолёт','airplane'],['поезд','train'],['аэропорт','airport'],['вокзал','station'],['билет','ticket'],['магазин','store'],['ресторан','restaurant'],['комната','room'],['квартира','apartment'],['улица','street'],['погода','weather'],['солнце','sun'],['дождь','rain'],['снег','snow'],['ветер','wind'],['море','sea'],['озеро','lake'],['лес','forest'],['гора','mountain'],['цветок','flower'],['собака','dog'],['кошка','cat'],['готовить','to cook'],['покупать','to buy'],['продавать','to sell'],['отвечать','to answer'],['спрашивать','to ask'],['рассказывать','to tell / narrate'],['объяснять','to explain'],['показывать','to show'],['пробовать','to try / taste'],['решить','to decide / solve'],['выбирать','to choose'],['оставаться','to remain / stay'],['возвращаться','to return'],['встречать','to meet'],['проводить','to spend / conduct'],['открывать','to open'],['закрывать','to close'],['начинать','to begin'],['продолжать','to continue'],['менять','to change'],['становиться','to become'],['получать','to receive'],['отправлять','to send'],['платить','to pay'],['танцевать','to dance'],['плавать','to swim'],['бегать','to run'],['улыбаться','to smile'],['смеяться','to laugh'],['плакать','to cry'],['обнимать','to hug'],['целовать','to kiss'],['скучать','to miss / be bored'],['надеяться','to hope'],['бояться','to fear'],['нравиться','to like'],['готовый','ready'],['важный','important'],['интересный','interesting'],['счастливый','happy'],['сильный','strong'],['сладкий','sweet'],['вкусный','tasty'],['тёплый','warm'],['холодный','cold'],['трудный','difficult'],['лёгкий','easy / light'],['свободный','free'],['занятый','busy'],['следующий','next'],['настоящий','real / present'],['целый','whole'],['огромный','huge']
+        ],
+        hard: [
+          ['совершенно','completely / absolutely'],['несмотря','despite'],['благодаря','thanks to'],['поскольку','since / because'],['поэтому','therefore'],['однако','however'],['впрочем','however / though'],['вероятно','probably'],['очевидно','obviously'],['необходимо','necessary'],['неожиданно','unexpectedly'],['постепенно','gradually'],['одновременно','simultaneously'],['самостоятельно','independently'],['непосредственно','directly'],['действительность','reality'],['возможность','possibility'],['необходимость','necessity'],['отношение','relationship / attitude'],['впечатление','impression'],['внимание','attention'],['поведение','behavior'],['состояние','condition / state'],['развитие','development'],['движение','movement'],['общество','society'],['правительство','government'],['образование','education'],['исследование','research'],['информация','information'],['предложение','proposal / sentence'],['обстоятельство','circumstance'],['окружающий','surrounding'],['собственный','one’s own'],['различный','various'],['определённый','certain / defined'],['единственный','only / sole'],['необычный','unusual'],['удивительный','amazing'],['прекрасный','wonderful / beautiful'],['замечательный','wonderful / remarkable'],['человеческий','human'],['профессиональный','professional'],['путешествовать','to travel'],['использовать','to use'],['представлять','to represent / imagine'],['происходить','to happen'],['существовать','to exist'],['продолжаться','to continue'],['оказываться','to turn out'],['появляться','to appear'],['исчезать','to disappear'],['достигать','to achieve / reach'],['предлагать','to offer'],['принимать','to accept / take'],['создавать','to create'],['изменять','to change'],['позволять','to allow'],['требовать','to require'],['зависеть','to depend'],['принадлежать','to belong'],['представить','to present / imagine'],['обнаружить','to discover'],['заметить','to notice'],['вспоминать','to remember / recall'],['сомневаться','to doubt'],['соглашаться','to agree'],['отказываться','to refuse'],['интересоваться','to be interested'],['беспокоиться','to worry'],['стараться','to try / make an effort'],['привыкать','to get used to'],['добираться','to get / make one’s way'],['предупреждать','to warn'],['поддерживать','to support'],['чрезвычайно','extremely'],['внимательно','attentively'],['полностью','completely'],['абсолютно','absolutely'],['бесконечно','endlessly'],['естественно','naturally'],['серьёзно','seriously'],['случайно','accidentally'],['специально','specially / intentionally']
+        ]
+      };
+
+      const targetTotal = 335;
+      const remainingHard = Math.max(0, targetTotal - banks.common.length - banks.intermediate.length);
+      banks.hard = banks.hard.slice(0, remainingHard);
+
+      const $ = (id) => document.getElementById(id);
+      const els = {
+        word: $('word'), meaning: $('meaning'), answer: $('answer'), feedback: $('feedback'), next: $('next'),
+        level: $('level'), auto: $('auto'), correct: $('correct'), streak: $('streak'), seen: $('seen'), pool: $('poolInfo')
+      };
+      const storageKey = 'russianTypingTrainer.v2';
+      const saved = JSON.parse(localStorage.getItem(storageKey) || '{}');
+      let stats = { correct: saved.correct || 0, streak: saved.streak || 0, seen: saved.seen || 0 };
+      let queue = [];
+      let current = null;
+      let previousRussian = '';
+      let solved = false;
+      let mistakeCounted = false;
+      let timer = null;
+
+      if (saved.level && ['common','intermediate','hard','all'].includes(saved.level)) els.level.value = saved.level;
+      els.auto.checked = saved.auto !== false;
+
+      function activePool() {
+        if (els.level.value === 'all') return [...banks.common, ...banks.intermediate, ...banks.hard];
+        return banks[els.level.value];
+      }
+      function shuffled(items) {
+        const copy = [...items];
+        for (let i = copy.length - 1; i > 0; i--) {
+          const j = Math.floor(Math.random() * (i + 1));
+          [copy[i], copy[j]] = [copy[j], copy[i]];
+        }
+        if (copy.length > 1 && copy[copy.length - 1][0] === previousRussian) {
+          [copy[copy.length - 1], copy[0]] = [copy[0], copy[copy.length - 1]];
+        }
+        return copy;
+      }
+      function save() {
+        localStorage.setItem(storageKey, JSON.stringify({ ...stats, level: els.level.value, auto: els.auto.checked }));
+      }
+      function paintStats() {
+        els.correct.textContent = stats.correct;
+        els.streak.textContent = stats.streak;
+        els.seen.textContent = stats.seen;
+      }
+      function refill() { queue = shuffled(activePool()); }
+      function focusAnswer() { window.setTimeout(() => els.answer.focus({ preventScroll: true }), 40); }
+      function nextWord() {
+        window.clearTimeout(timer);
+        if (!queue.length) refill();
+        current = queue.pop();
+        previousRussian = current[0];
+        solved = false;
+        mistakeCounted = false;
+        els.word.textContent = current[0];
+        els.meaning.textContent = 'Meaning hidden until you type it';
+        els.meaning.className = 'meaning';
+        els.answer.value = '';
+        els.answer.className = '';
+        els.feedback.textContent = '';
+        els.feedback.className = 'feedback';
+        els.next.disabled = true;
+        els.pool.textContent = `${queue.length + 1} left`;
+        focusAnswer();
+      }
+      function solve() {
+        solved = true;
+        stats.correct += 1;
+        stats.streak += 1;
+        stats.seen += 1;
+        els.answer.className = 'correct';
+        els.meaning.textContent = `${current[0]} = ${current[1]}`;
+        els.meaning.className = 'meaning revealed';
+        els.feedback.textContent = '✓ Correct';
+        els.feedback.className = 'feedback ok';
+        els.next.disabled = false;
+        paintStats();
+        save();
+        if (els.auto.checked) timer = window.setTimeout(nextWord, 1050);
+      }
+      function check() {
+        if (solved || !current) return;
+        const typed = els.answer.value.trim().toLocaleLowerCase('ru');
+        const expected = current[0].toLocaleLowerCase('ru');
+        if (typed === expected) return solve();
+        if (typed && !expected.startsWith(typed)) {
+          els.answer.className = 'wrong';
+          els.feedback.textContent = 'Keep going — copy the word exactly.';
+          els.feedback.className = 'feedback no';
+          if (!mistakeCounted) {
+            stats.streak = 0;
+            mistakeCounted = true;
+            paintStats();
+            save();
+          }
+        } else {
+          els.answer.className = '';
+          els.feedback.textContent = '';
+          els.feedback.className = 'feedback';
+        }
+      }
+
+      els.answer.addEventListener('input', check);
+      els.answer.addEventListener('keydown', (event) => {
+        if (event.key === 'Enter' && solved) nextWord();
+      });
+      els.next.addEventListener('click', nextWord);
+      els.level.addEventListener('change', () => { queue = []; save(); nextWord(); });
+      els.auto.addEventListener('change', () => {
+        save();
+        if (!els.auto.checked) window.clearTimeout(timer);
+        else if (solved) timer = window.setTimeout(nextWord, 700);
+      });
+      $('reset').addEventListener('click', () => {
+        if (!window.confirm('Reset your counters and streak?')) return;
+        stats = { correct: 0, streak: 0, seen: 0 };
+        paintStats();
+        save();
+        focusAnswer();
+      });
+
+      paintStats();
+      nextWord();
+      if ('serviceWorker' in navigator) window.addEventListener('load', () => navigator.serviceWorker.register('./sw.js'));
+    })();
+  </script>
+</body>
+</html>
